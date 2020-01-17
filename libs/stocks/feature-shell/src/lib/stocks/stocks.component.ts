@@ -13,12 +13,13 @@ export class StocksComponent implements OnInit {
 
   quotes$ = this.priceQuery.priceQueries$;
 
-  fromDate : Date = null;
-  toDate : Date = null;
-  showDatePicker : boolean;
+  fromDate: Date = null;
+  toDate: Date = null;
+  showDatePicker: boolean;
 
   //Date selection beyond current date will be disabled in the Datepicker control
   maxDate = new Date();
+
   //Date selection prior to the given date below will be disabled in the Datepicker control
   minDate = new Date(2010, 0, 1);
 
@@ -45,15 +46,15 @@ export class StocksComponent implements OnInit {
 
   fetchQuote() {
     if (this.stockPickerForm.valid) {
-      const { symbol, period } = this.stockPickerForm.value;
-      if(period === 'Custom') {
-        if(this.fromDate && this.toDate) {
-          this.priceQuery.fetchQuote(symbol, this.getPeriod(this.fromDate, this.toDate));
+      const {symbol, period} = this.stockPickerForm.value;
+      if (period === 'Custom') {
+        if (this.fromDate && this.toDate) {
+          const range = this.getPeriod(this.fromDate, this.toDate);
+          this.priceQuery.fetchQuote(symbol, range, this.fromDate, this.toDate);
         }
       } else {
         this.priceQuery.fetchQuote(symbol, period);
       }
-
     }
   }
 
@@ -81,40 +82,33 @@ export class StocksComponent implements OnInit {
   }
 
   //find out the range (period) between the two dates selected
-  getPeriod(fromDate: Date, toDate: Date) : string {
+  getPeriod(fromDate: Date, toDate: Date): string {
     let period = '';
     const diffInTime = fromDate.getTime() === toDate.getTime() ? 0 : new Date().getTime() - fromDate.getTime();
 
-    if(diffInTime === 0)
-    {
+    if (diffInTime === 0) {
       const month = fromDate.getMonth() + 1;
       const day = fromDate.getDate() < 10 ? '0' + fromDate.getDate() : fromDate.getDate();
-
       period = 'date/' + fromDate.getFullYear() + (month < 10 ? '0' + month : month) + day;
 
       return period;
-    }
-    else
-    {
+    } else {
       const days = Math.round(Math.abs(diffInTime / (1000 * 60 * 60 * 24)));
-      const years: number = days / 365;
-
-      if (years > 5)
+      if (days > 5 * 365)
         period = 'max';
-      else if (years > 2)
+      else if (days > (2 * 365) && days <= (5 * 365))
         period = '5y';
-      else if (years > 1)
+      else if (days > 365 && days <= (2 * 365))
         period = '2y';
-      else if (years > 0.5 && years <= 1)
+      else if (days > 180 && days <= 365)
         period = '1y';
-      else if (years > 0.25 && years <= 0.5)
+      else if (days > 90 && days <= 180)
         period = '6m';
-      else if (years > 0.08 && years <= 0.25)
+      else if (days > 30 && days <= 90)
         period = '3m';
-      else
+      else if (days > 5 && days <= 30)
         period = '1m';
-
-      if (days > 0 && days <= 5)
+      else
         period = '5d';
 
       return period;
@@ -122,17 +116,14 @@ export class StocksComponent implements OnInit {
   }
 
   callDatePicker(event) {
-
     //Reset date picker dates
     this.fromDate = null;
     this.toDate = null;
 
-    if(event.value === "Custom") {
+    if (event.value === "Custom") {
       this.showDatePicker = true;
-    }
-    else {
+    } else {
       this.showDatePicker = false;
     }
   }
-
 }
