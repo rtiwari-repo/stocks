@@ -1,5 +1,6 @@
+<span *ngIf="chartData && chartData.length === 0">No Data Found!</span>
 <google-chart
-  *ngIf="this.data$ | async"
+  *ngIf="chartData && chartData.length > 0"
   [title]="chart.title"
   [type]="chart.type"
   [data]="chartData"

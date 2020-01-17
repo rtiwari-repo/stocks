@@ -12,6 +12,7 @@ export class StocksComponent implements OnInit {
   symbol: string;
 
   quotes$ = this.priceQuery.priceQueries$;
+  chartData: any;
 
   fromDate: Date = null;
   toDate: Date = null;
@@ -42,7 +43,16 @@ export class StocksComponent implements OnInit {
     });
   }
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.quotes$.subscribe((newData) =>  {
+      if(this.showDatePicker) {
+        this.chartData = newData.filter((x) => new Date(x[0]) <= this.toDate && (new Date(x[0]) >= this.fromDate));
+        console.log(this.chartData);
+      } else {
+        this.chartData = newData;
+      }
+    });
+  }
 
   fetchQuote() {
     if (this.stockPickerForm.valid) {
@@ -50,7 +60,7 @@ export class StocksComponent implements OnInit {
       if (period === 'Custom') {
         if (this.fromDate && this.toDate) {
           const range = this.getPeriod(this.fromDate, this.toDate);
-          this.priceQuery.fetchQuote(symbol, range, this.fromDate, this.toDate);
+          this.priceQuery.fetchQuote(symbol, range);
         }
       } else {
         this.priceQuery.fetchQuote(symbol, period);
@@ -83,16 +93,8 @@ export class StocksComponent implements OnInit {
 
   //find out the range (period) between the two dates selected
   getPeriod(fromDate: Date, toDate: Date): string {
-    let period = '';
-    const diffInTime = fromDate.getTime() === toDate.getTime() ? 0 : new Date().getTime() - fromDate.getTime();
-
-    if (diffInTime === 0) {
-      const month = fromDate.getMonth() + 1;
-      const day = fromDate.getDate() < 10 ? '0' + fromDate.getDate() : fromDate.getDate();
-      period = 'date/' + fromDate.getFullYear() + (month < 10 ? '0' + month : month) + day;
-
-      return period;
-    } else {
+      let period = '';
+      const diffInTime = fromDate.getTime() === toDate.getTime() ? 0 : new Date().getTime() - fromDate.getTime();
       const days = Math.round(Math.abs(diffInTime / (1000 * 60 * 60 * 24)));
       if (days > 5 * 365)
         period = 'max';
@@ -112,8 +114,8 @@ export class StocksComponent implements OnInit {
         period = '5d';
 
       return period;
-    }
   }
+
 
   callDatePicker(event) {
     //Reset date picker dates
